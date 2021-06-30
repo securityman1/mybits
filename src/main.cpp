@@ -1141,7 +1141,7 @@ bool ContextualCheckTransaction(
             // transactions.
             if (tx.nExpiryHeight >= TX_EXPIRY_HEIGHT_THRESHOLD) {
                 return state.DoS(100, error("CheckTransaction(): expiry height is too high"),
-                                REJECT_INVALID, "bad-tx-expiry-height-too-high");
+                                 REJECT_INVALID, "bad-tx-expiry-height-too-high");
             }
         }
     } else {
@@ -1149,8 +1149,10 @@ bool ContextualCheckTransaction(
         // noncontextual checks that became contextual after NU5 activation.
 
         if (tx.nExpiryHeight >= TX_EXPIRY_HEIGHT_THRESHOLD) {
-            return state.DoS(100, error("CheckTransaction(): expiry height is too high"),
-                            REJECT_INVALID, "bad-tx-expiry-height-too-high");
+            return state.DoS(
+                dosLevelPotentiallyRelaxing,
+                error("CheckTransaction(): expiry height is too high"),
+                REJECT_INVALID, "bad-tx-expiry-height-too-high");
         }
 
         // Check that Orchard transaction components are not present prior to
@@ -1426,6 +1428,8 @@ bool CheckTransactionWithoutProofVerification(const CTransaction& tx, CValidatio
     // e.g. a pure Sapling transaction with only dummy spends (which is
     // undetectable). Contextual checks ensure that only one of Sprout
     // joinsplits or Orchard actions may be present.
+    // Note that orchard_bundle.SpendsEnabled() is false when no
+    // Orchard bundle is present, i.e. when nActionsOrchard == 0.
     if (tx.vin.empty() &&
         tx.vJoinSplit.empty() &&
         tx.vShieldedSpend.empty() &&

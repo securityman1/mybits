@@ -875,7 +875,7 @@ bool ContextualCheckTransaction(
         if (!saplingActive) {
             // Reject transactions with invalid version
             // OVERWINTER_MIN_TX_VERSION is checked against as a non-contextual check.
-            if (tx.nVersion > OVERWINTER_MAX_TX_VERSION ) {
+            if (tx.nVersion > OVERWINTER_MAX_TX_VERSION) {
                 return state.DoS(
                     dosLevelPotentiallyRelaxing,
                     error("ContextualCheckTransaction(): overwinter version too high"),
@@ -1099,8 +1099,8 @@ bool ContextualCheckTransaction(
             if (!(tx.GetConsensusBranchId() && *tx.GetConsensusBranchId() == consensusBranchId)) {
                 return state.DoS(
                     dosLevelPotentiallyRelaxing,
-                    error("ContextualCheckTransaction(): consensus branch id not set"),
-                    REJECT_INVALID, "bad-tx-missing-consensus-branch-id");
+                    error("ContextualCheckTransaction(): transaction's consensus branch id does not match the current consensus branch"),
+                    REJECT_INVALID, "bad-tx-consensus-branch-id-mismatch");
             }
 
             // v5 transactions must have empty joinSplits
@@ -1113,34 +1113,33 @@ bool ContextualCheckTransaction(
         }
 
 
-        //nSpendsSapling, nOutputsSapling, and nActionsOrchard MUST all be less than 2^16
+        // nSpendsSapling, nOutputsSapling, and nActionsOrchard MUST all be less than 2^16
         size_t max_spends = (1 << 16) - 1;
         if (tx.vShieldedSpend.size() > max_spends) {
             return state.DoS(
                 dosLevelPotentiallyRelaxing,
-                error("ContextualCheckTransaction(): More than 2^16 Sapling spends"),
+                error("ContextualCheckTransaction(): 2^16 or more Sapling spends"),
                 REJECT_INVALID, "bad-tx-too-many-sapling-spends");
         }
         if (tx.vShieldedOutput.size() > max_spends) {
             return state.DoS(
                 dosLevelPotentiallyRelaxing,
-                error("ContextualCheckTransaction(): More than 2^16 Sapling outputs"),
+                error("ContextualCheckTransaction(): 2^16 or more Sapling outputs"),
                 REJECT_INVALID, "bad-tx-too-many-sapling-outputs");
         }
         if (orchard_bundle.GetNumActions() > max_spends) {
             return state.DoS(
                 dosLevelPotentiallyRelaxing,
-                error("ContextualCheckTransaction(): More than 2^16 Orchard actions"),
+                error("ContextualCheckTransaction(): 2^16 or more Orchard actions"),
                 REJECT_INVALID, "bad-tx-too-many-orchard-actions");
         }
 
         if (tx.IsCoinBase()) {
-            // Check that Orchard coinbase outputs can be decrypted with the all-zeros OVK
+            // TODO: Check that Orchard coinbase outputs can be decrypted with the all-zeros OVK
         }
     } else {
-        // Rules that apply generally before Nu5. These were
-        // previously noncontextual checks that became contextual
-        // after Nu5 activation.
+        // Rules that apply generally before NU5. These were previously
+        // noncontextual checks that became contextual after NU5 activation.
 
         // Check that Orchard transaction components are not present prior to
         // NU5. NOTE: This is an internal zcashd consistency check; it does not
@@ -1650,7 +1649,7 @@ bool CheckTransactionWithoutProofVerification(const CTransaction& tx, CValidatio
                              REJECT_INVALID, "bad-cb-has-spend-description");
         // See ContextualCheckTransaction for consensus rules on coinbase output descriptions.
         if (orchard_bundle.SpendsEnabled())
-            return state.DoS(100, error("CheckTransaction(): coinbase has Orchard spends"),
+            return state.DoS(100, error("CheckTransaction(): coinbase has enableSpendsOrchard set"),
                              REJECT_INVALID, "bad-cb-has-orchard-spend");
 
         if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)

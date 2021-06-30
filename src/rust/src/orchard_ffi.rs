@@ -281,9 +281,7 @@ pub extern "C" fn orchard_bundle_outputs_enabled(
 }
 
 #[no_mangle]
-pub extern "C" fn orchard_bundle_spends_enabled(
-    bundle: *const Bundle<Authorized, Amount>,
-) -> bool {
+pub extern "C" fn orchard_bundle_spends_enabled(bundle: *const Bundle<Authorized, Amount>) -> bool {
     let bundle = unsafe { bundle.as_ref() };
     bundle.map(|b| b.flags().spends_enabled()).unwrap_or(false)
 }

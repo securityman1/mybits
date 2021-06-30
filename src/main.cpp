@@ -1440,8 +1440,8 @@ bool CheckTransactionWithoutProofVerification(const CTransaction& tx, CValidatio
         tx.vShieldedSpend.empty() &&
         !orchard_bundle.SpendsEnabled())
     {
-        return state.DoS(10, error("CheckTransaction(): vin empty"),
-                         REJECT_INVALID, "bad-txns-vin-empty");
+        return state.DoS(10, error("CheckTransaction(): no source of funds"),
+                         REJECT_INVALID, "bad-txns-no-source-of-funds");
     }
     // Transactions must contain some potential useful sink of funds.  This
     // rejects obviously-invalid transaction constructions early, but cannot
@@ -1456,8 +1456,8 @@ bool CheckTransactionWithoutProofVerification(const CTransaction& tx, CValidatio
         tx.vShieldedOutput.empty() &&
         !orchard_bundle.OutputsEnabled())
     {
-        return state.DoS(10, error("CheckTransaction(): vout empty"),
-                         REJECT_INVALID, "bad-txns-vout-empty");
+        return state.DoS(10, error("CheckTransaction(): no sink of funds"),
+                         REJECT_INVALID, "bad-txns-no-sink-of-funds");
     }
 
     // Size limits
@@ -1587,7 +1587,7 @@ bool CheckTransactionWithoutProofVerification(const CTransaction& tx, CValidatio
 
             if (!MoneyRange(nValueIn)) {
                 return state.DoS(100, error("CheckTransaction(): txin total out of range"),
-                                    REJECT_INVALID, "bad-txns-txintotal-toolarge");
+                                 REJECT_INVALID, "bad-txns-txintotal-toolarge");
             }
         }
 

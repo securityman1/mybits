@@ -1114,20 +1114,20 @@ bool ContextualCheckTransaction(
 
 
         // nSpendsSapling, nOutputsSapling, and nActionsOrchard MUST all be less than 2^16
-        size_t max_spends = (1 << 16) - 1;
-        if (tx.vShieldedSpend.size() > max_spends) {
+        size_t max_elements = (1 << 16) - 1;
+        if (tx.vShieldedSpend.size() > max_elements) {
             return state.DoS(
                 dosLevelPotentiallyRelaxing,
                 error("ContextualCheckTransaction(): 2^16 or more Sapling spends"),
                 REJECT_INVALID, "bad-tx-too-many-sapling-spends");
         }
-        if (tx.vShieldedOutput.size() > max_spends) {
+        if (tx.vShieldedOutput.size() > max_elements) {
             return state.DoS(
                 dosLevelPotentiallyRelaxing,
                 error("ContextualCheckTransaction(): 2^16 or more Sapling outputs"),
                 REJECT_INVALID, "bad-tx-too-many-sapling-outputs");
         }
-        if (orchard_bundle.GetNumActions() > max_spends) {
+        if (orchard_bundle.GetNumActions() > max_elements) {
             return state.DoS(
                 dosLevelPotentiallyRelaxing,
                 error("ContextualCheckTransaction(): 2^16 or more Orchard actions"),
@@ -1432,6 +1432,8 @@ bool CheckTransactionWithoutProofVerification(const CTransaction& tx, CValidatio
     // is undetectable), and does not prevent transparent transactions from
     // sending all funds to miners.  Contextual checks ensure that only one of
     // Sprout joinsplits or Orchard actions may be present.
+    // Note that orchard_bundle.OutputsEnabled() is false when no
+    // Orchard bundle is present, i.e. when nActionsOrchard == 0.
     if (tx.vout.empty() &&
         tx.vJoinSplit.empty() &&
         tx.vShieldedOutput.empty() &&

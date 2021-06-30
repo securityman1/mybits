@@ -831,8 +831,8 @@ bool ContextualCheckTransaction(
     assert(!saplingActive || overwinterActive); // Sapling cannot be active unless Overwinter is
     assert(!heartwoodActive || saplingActive);  // Heartwood cannot be active unless Sapling is
     assert(!canopyActive || heartwoodActive);   // Canopy cannot be active unless Heartwood is
-    assert(!nu5Active || canopyActive);         // Nu5 cannot be active unless Canopy is
-    assert(!futureActive || nu5Active);         // ZFUTURE must always include the latest live version
+    assert(!nu5Active || canopyActive);         // NU5 cannot be active unless Canopy is
+    assert(!futureActive || nu5Active);         // ZFUTURE must include consensus rules for all supported network upgrades.
 
     auto const orchard_bundle = tx.GetOrchardBundle();
 
@@ -1053,7 +1053,7 @@ bool ContextualCheckTransaction(
         // after Canopy activation.
     }
 
-    // Rules that apply to Nu5 or later:
+    // Rules that apply to NU5 or later:
     if (nu5Active) {
         // Reject transactions with invalid version group id
         if (!futureActive) {

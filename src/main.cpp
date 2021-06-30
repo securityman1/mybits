@@ -1067,7 +1067,7 @@ bool ContextualCheckTransaction(
 
         // Check that the consensus branch ID is unset in Sapling V4 transactions
         if (tx.nVersionGroupId == SAPLING_VERSION_GROUP_ID) {
-            // transactions.  NOTE: This is an internal zcashd consistency
+            // NOTE: This is an internal zcashd consistency
             // check; it does not correspond to a consensus rule in the
             // protocol specification, but is instead an artifact of the
             // internal zcashd transaction representation.
@@ -1102,23 +1102,32 @@ bool ContextualCheckTransaction(
                     error("ContextualCheckTransaction(): consensus branch id not set"),
                     REJECT_INVALID, "bad-tx-missing-consensus-branch-id");
             }
+
+            // v5 transactions must have empty joinSplits
+            if (!(tx.vJoinSplit.empty())) {
+                return state.DoS(
+                    dosLevelPotentiallyRelaxing,
+                    error("ContextualCheckTransaction(): Sprout JoinSplits not allowed in ZIP225 transactions"),
+                    REJECT_INVALID, "bad-tx-has-joinsplits");
+            }
         }
 
+
         //nSpendsSapling, nOutputsSapling, and nActionsOrchard MUST all be less than 2^16
-        size_t max_spends = 1 << 16;
-        if (tx.vShieldedSpend.size() >= max_spends) {
+        size_t max_spends = (1 << 16) - 1;
+        if (tx.vShieldedSpend.size() > max_spends) {
             return state.DoS(
                 dosLevelPotentiallyRelaxing,
                 error("ContextualCheckTransaction(): More than 2^16 Sapling spends"),
                 REJECT_INVALID, "bad-tx-too-many-sapling-spends");
         }
-        if (tx.vShieldedOutput.size() >= max_spends) {
+        if (tx.vShieldedOutput.size() > max_spends) {
             return state.DoS(
                 dosLevelPotentiallyRelaxing,
                 error("ContextualCheckTransaction(): More than 2^16 Sapling outputs"),
                 REJECT_INVALID, "bad-tx-too-many-sapling-outputs");
         }
-        if (orchard_bundle.GetNumActions() >= max_spends) {
+        if (orchard_bundle.GetNumActions() > max_spends) {
             return state.DoS(
                 dosLevelPotentiallyRelaxing,
                 error("ContextualCheckTransaction(): More than 2^16 Orchard actions"),
@@ -1405,10 +1414,11 @@ bool CheckTransactionWithoutProofVerification(const CTransaction& tx, CValidatio
     }
     auto orchard_bundle = tx.GetOrchardBundle();
 
-    // Transactions must contain some potential source of funds. This
-    // rejects obviously-invalid transaction constructions early, but
-    // cannot prevent e.g. a pure Sapling transaction with only dummy
-    // spends (which is undetectable).
+    // Transactions must contain some potential source of funds. This rejects
+    // obviously-invalid transaction constructions early, but cannot prevent
+    // e.g. a pure Sapling transaction with only dummy spends (which is
+    // undetectable). Contextual checks ensure that only one of Sprout
+    // joinsplits or Orchard actions may be present.
     if (tx.vin.empty() &&
         tx.vJoinSplit.empty() &&
         tx.vShieldedSpend.empty() &&
@@ -1417,11 +1427,12 @@ bool CheckTransactionWithoutProofVerification(const CTransaction& tx, CValidatio
         return state.DoS(10, error("CheckTransaction(): vin empty"),
                          REJECT_INVALID, "bad-txns-vin-empty");
     }
-    // Transactions must contain some potential useful sink of funds.
-    // This rejects obviously-invalid transaction constructions early,
-    // but cannot prevent e.g. a pure Sapling transaction with only
-    // dummy outputs (which is undetectable), and does not prevent
-    // transparent transactions from sending all funds to miners.
+    // Transactions must contain some potential useful sink of funds.  This
+    // rejects obviously-invalid transaction constructions early, but cannot
+    // prevent e.g. a pure Sapling transaction with only dummy outputs (which
+    // is undetectable), and does not prevent transparent transactions from
+    // sending all funds to miners.  Contextual checks ensure that only one of
+    // Sprout joinsplits or Orchard actions may be present.
     if (tx.vout.empty() &&
         tx.vJoinSplit.empty() &&
         tx.vShieldedOutput.empty() &&

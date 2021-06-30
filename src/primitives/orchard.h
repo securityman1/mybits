@@ -122,8 +122,8 @@ public:
         return orchard_bundle_spends_enabled(inner.get());
     }
 
-    bool HasValidCoinbaseOutputs() const {
-        return orchard_bundle_has_valid_coinbase_outputs(inner.get());
+    bool CoinbaseOutputsAreValid() const {
+        return orchard_bundle_coinbase_outputs_are_valid(inner.get());
     }
 };
 

@@ -295,7 +295,7 @@ pub extern "C" fn orchard_bundle_spends_enabled(bundle: *const Bundle<Authorized
 /// This should only be called on an Orchard bundle that is
 /// an element of a coinbase transaction.
 #[no_mangle]
-pub extern "C" fn orchard_bundle_has_valid_coinbase_outputs(
+pub extern "C" fn orchard_bundle_coinbase_outputs_are_valid(
     bundle: *const Bundle<Authorized, Amount>,
 ) -> bool {
     if let Some(bundle) = unsafe { bundle.as_ref() } {

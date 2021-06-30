@@ -1135,7 +1135,7 @@ bool ContextualCheckTransaction(
         }
 
         if (tx.IsCoinBase()) {
-            if (!orchard_bundle.HasValidCoinbaseOutputs()) {
+            if (!orchard_bundle.CoinbaseOutputsAreValid()) {
                 return state.DoS(
                     DOS_LEVEL_BLOCK,
                     error("ContextualCheckTransaction(): Orchard coinbase action has invalid ciphertext"),
